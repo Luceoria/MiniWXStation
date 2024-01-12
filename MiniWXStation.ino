@@ -69,7 +69,7 @@ ESP8266WebServer server(80);
 //**************************************
 //* INTERNAL USE & DEBUG               *
 //**************************************
-const char SOFT_VER[] = "v1.1f";
+const char SOFT_VER[] = "v1.1g";
 //#define DEBUG_READSETTINGSFILE
 //#define DEBUG_FORM_REPLIES
 #define DISPLAY_RW_OUTPUT
@@ -84,7 +84,6 @@ const char SOFT_VER[] = "v1.1f";
 
 //**** CHOOSE WEBPAGES LANGUAGE
 #define LANG_BULGARIAN
-//#define LANG_ENGLISH
 //#define LANG_SPANISH
 //#define LANG_ITALIAN
 //#define LANG_CATALAN
@@ -99,8 +98,11 @@ const char* WiFi_hostname = "MiniWX";
 //**** APRS PASSWORD (use -1 if you are using a CWOP callsign)
 const char* AprsPassw = "YouAPRSnumericalPASS";
 
+//**** APRS Destination Call (device identifier)
+const char* AprsDevice = "APZMWX";
+
 //**** APRS COMMENT, you can set this string as you want (max 43 chars)
-const char* APRS_CMNT = "MiniWX Station";
+const char* APRS_CMNT = "MiniWX Station YourHomeTown";
 
 //**** APRS_PRJ, Telemetry Project Title (max 23 chars)
 const char* APRS_PRJ = "MiniWx Project";
@@ -113,13 +115,16 @@ const char* APRS_PRJ = "MiniWx Project";
 //**** uncomment this for weatherunderground upload,remember to set ID and PASSWORD of your account
 //#define USE_WUNDER
 //* change ID and PASSWORD with yours
-const char ID [] = "wifiuser";                      
-const char PASSWORD [] = "wifipass";
+const char ID [] = "YourWunderID";                      
+const char PASSWORD [] = "YourWunderpasswd";
 
 //**** show BME280 registers in Serial Output;
 //#define DISPLAY_BME_REGS
 //**** show BME280 values in Serial Output;
 #define DISPLAY_BME_VAL
+
+//**** read D5 and D6 input states and put them to telemetry
+//#define READ_INPUTS
 
 //**** blinking led to show that into the 10 minutes the system is still alive WILL BE ELIMINATED IN BATTERY POWERED VERSION (1" blink)
 //**** NOTE: WEMOS D1 Mini doens't have this led, NodeMCU V0.9 & V1.0 have it.
@@ -135,10 +140,10 @@ const char PASSWORD [] = "wifipass";
 #define NTPSYNC_DELAY  12
 
 //**** NTP Server to use
-const char* NTP_Server = "ntp1.inrim.it"; //italian national institute for measures
+const char* NTP_Server = "pool.ntp.org"; //italian national institute for measures
 
 //**** Your time zone UTC related (floating point number)
-#define TIME_ZONE 2.0f
+#define TIME_ZONE 1.0f
 
 //**** Set credential for OTA firmware upgrade <<--->>
 //*uncomment the #define if you wanna use this handy feature
@@ -702,11 +707,12 @@ void AdjustFieldsets( String* page) {
 //***********************************************************
 void handleRoot() {
 
-#ifdef LANG_BULGARIAN
-  String page = FPSTR(PAGE_Main_BG);
-#endif
+
 #ifdef LANG_ENGLISH
   String page = FPSTR(PAGE_Main_EN);
+#endif
+#ifdef LANG_BULGARIAN
+  String page = FPSTR(PAGE_Main_BG);
 #endif
 #ifdef LANG_SPANISH
   String page = FPSTR(PAGE_Main_ES);
@@ -734,7 +740,7 @@ void handleRoot() {
   page.replace(F("{{alt}}"), String(station.altitude));
 
   SystemUpTime();
-  String sysUpTime("Days " + String(sysUpTimeDy) + ": Hrs " + String(sysUpTimeHr) + ": Min" + String(sysUpTimeMn) + ": Sec" + String(sysUpTimeSec));
+  String sysUpTime(String(sysUpTimeDy) + " days " + String(sysUpTimeHr) + ":" + String(sysUpTimeMn) + ":" + String(sysUpTimeSec));
   page.replace(F("{{uptime}}"), sysUpTime);
 
   getBmeValues();
@@ -848,8 +854,11 @@ void handleSubmit() {
       //Display sysmsg in a new page and come back
       message += F("<fieldset style='width:49%'><legend style='text-shadow: 2px 1px grey; font-size: 18px;'>MiniWX&#8482; system message </legend>");
 
-#ifdef LANG_BULGARIAN
+#ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to APRS server...</div>");
+#endif
+#ifdef LANG_BULGARIAN
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor APRS...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor APRS...</div>");
@@ -1113,7 +1122,7 @@ void handleJQuery() {
   }
   sprintf(espclock, "%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second);
   sprintf(nexttx, "%02d:%02d:%02d", nextHour, nextMinTx, nextSecTx);
-  sprintf(uptime, "%d days, %02d : %02d : %02d", sysUpTimeDy, sysUpTimeHr, sysUpTimeMn, sysUpTimeSec);
+  sprintf(uptime, "%d days %02d:%02d:%02d", sysUpTimeDy, sysUpTimeHr, sysUpTimeMn, sysUpTimeSec);
 
   // sends multiple data in array-form
   server.send ( 200, "text/plain", String(espclock) + "," +
@@ -1211,7 +1220,7 @@ void handleNotFound() {
   message += FPSTR(HTTP_HEAD_HTML);
 #ifdef LANG_BULGARIAN
   message.replace(F("{{language}}"), "bg");
-#endif
+#endif  
 #ifdef LANG_ENGLISH
   message.replace(F("{{language}}"), "en");
 #endif
@@ -1284,46 +1293,46 @@ void handleGraphs() {
   message += FPSTR(HTTP_DIV_STYLE);
   message += FPSTR(HTTP_BUTN_STYLE);
   message += FPSTR(HTTP_SVG_BODY);
+#ifdef LANG_ENGLISH
+  message.replace(F("{{svg_temp}}"), "Temperature (°C)");
+  message.replace(F("{{svg_pres}}"), "Pressure (hPa)");
+  message.replace(F("{{svg_rhum}}"), "Relative Humidity (%)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
+#endif
 #ifdef LANG_BULGARIAN
   message.replace(F("{{svg_temp}}"), "Температура (°C)");
   message.replace(F("{{svg_pres}}"), "Налягане (hPa)");
   message.replace(F("{{svg_rhum}}"), "Влажност (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
-#endif
-#ifdef LANG_ENGLISH
-  message.replace(F("{{svg_temp}}"), "Temperature (°C)");
-  message.replace(F("{{svg_pres}}"), "Pressure (hPa)");
-  message.replace(F("{{svg_rhum}}"), "relative Humidity (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
 #ifdef LANG_SPANISH
   message.replace(F("{{svg_temp}}"), "Temperatura °C");
   message.replace(F("{{svg_pres}}"), "Presión (hPa)");
   message.replace(F("{{svg_rhum}}"), "Humedad relativa (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
 #ifdef LANG_ITALIAN
   message.replace(F("{{svg_temp}}"), "Temperatura °C");
   message.replace(F("{{svg_pres}}"), "Pressione (hPa)");
   message.replace(F("{{svg_rhum}}"), "Umidità relativa (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
 #ifdef LANG_CATALAN
   message.replace(F("{{svg_temp}}"), "Temperatura °C");
   message.replace(F("{{svg_pres}}"), "Pressió (hPa)");
   message.replace(F("{{svg_rhum}}"), "Humitat relativa (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
 #ifdef LANG_TURKISH
   message.replace(F("{{svg_temp}}"), "Sıcaklık °C");
   message.replace(F("{{svg_pres}}"), "Basınç (hPa)");
   message.replace(F("{{svg_rhum}}"), "Bağıl Nem (%)");
-  message.replace(F("{{svg_rssi}}"), "rssi (dbm)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
   message.replace(F("{{svg_grid}}"), FPSTR(HTTP_SVG_GRID));
 
   message += FPSTR(HTTP_EXIT_BUTN);
-#ifdef LANG_ENGLISH
+#ifdef LANG_BULGARIAN
   message.replace(F("{{exit_btn}}"), "Изход");
 #endif
 #ifdef LANG_ENGLISH
@@ -1606,15 +1615,36 @@ void Send2APRS()
     return;
   }
 
+  // check lat/lon string length
   if (strlen(station.latitude) != 8 || strlen(station.longitude) != 9 ) {
     Serial.println("Incorrect lat/lon length!");
     return;
   }
 
+  // check if temp/humidity/pressure are in valid ranges
+  if (wx.temperatureF) {
+    if (wx.temperatureF > 150 || wx.temperatureF < -100) {
+      Serial.printf("Incorrect temperature %f\n", wx.temperatureF);
+      return;
+    }
+  }
+  if (wx.humidity) {
+    if (wx.humidity < 0 || wx.humidity > 100) {
+      Serial.printf("Incorrect humidity %f\n", wx.humidity);
+      return;
+    }
+  }
+  if (wx.pressure) {
+    if ((wx.pressure / 100) < 900 || (wx.pressure / 100) > 1100) {
+      Serial.printf("Incorrect pressure %f\n", wx.pressure);
+      return;
+    }
+  }
+  
   //MANDATORY: CWOP doesn't need password, but need to register to the CWOP program, and obtain a valid callsign
   //sprintf(login, "user %s pass -1 vers VERSION ESP8266", station.callsign);
 
-  sprintf(login, "user %s pass %s vers MiniWXStation v1.1g", station.callsign, sets.AprsPassw); // user must be "yourcallsign-13" if you are an hamradio operator, otherwise request and use a CWOP callsign....
+  sprintf(login, "user %s pass %s vers MiniWXStation %s", station.callsign, sets.AprsPassw, SOFT_VER); // user must be "yourcallsign-13" if you are an hamradio operator, otherwise request and use a CWOP callsign....
 
   //retrieve telemetry infos
   tl.rssi = abs(WiFi.RSSI());   // strenght of WiFi AP signal
@@ -1664,7 +1694,8 @@ void Send2APRS()
   if ( cnt == 0 || cnt == 64 || cnt == 128 || cnt == 192 ) // Sending one position packet only after 64 telemetry packets sent
   {
     Serial.println(F("** POSITION PACKET **"));
-    sprintf(sentence, "%s>APRS,TCPIP*:=%s/%s&%s (%s)", station.callsign,
+    sprintf(sentence, "%s>%s,TCPIP*:=%s/%s&%s (%s)", station.callsign,
+            AprsDevice,
             station.latitude,
             station.longitude,
             sets.APRS_CMNT, SOFT_VER);
@@ -1676,7 +1707,8 @@ void Send2APRS()
 
   switch (sets.ChipModel) {
     case MOD_BMP280:  //temp,press and no rHum
-      sprintf(sentence, "%s>APRS,TCPIP*:=%s/%s_.../...g...t%03dr...p...P...h..b%05d", station.callsign,
+      sprintf(sentence, "%s>%s,TCPIP*:=%s/%s_.../...g...t%03dr...p...P...h..b%05d", station.callsign,
+              AprsDevice,
               station.latitude,
               station.longitude,
               (int)(wx.temperatureF),
@@ -1684,7 +1716,8 @@ void Send2APRS()
 
       break;
     case MOD_BME280:  //temp,press,rHum
-      sprintf(sentence, "%s>APRS,TCPIP*:=%s/%s_.../...g...t%03dr...p...P...h%02db%05d", station.callsign,
+      sprintf(sentence, "%s>%s,TCPIP*:=%s/%s_.../...g...t%03dr...p...P...h%02db%05d", station.callsign,
+              AprsDevice,
               station.latitude,
               station.longitude,
               (int)(wx.temperatureF),
@@ -1692,7 +1725,8 @@ void Send2APRS()
               (int)(wx.pressure / 10));
       break;
     case 0x00:  //no values at all
-      sprintf(sentence, "%s>APRS,TCPIP*:=%s/%s_.../...g...t...r...p...P...h..b.....", station.callsign,
+      sprintf(sentence, "%s>%s,TCPIP*:=%s/%s_.../...g...t...r...p...P...h..b.....", station.callsign,
+              AprsDevice,
               station.latitude,
               station.longitude);
       break;
@@ -1719,48 +1753,61 @@ void Send2APRS()
     while (len < 9);
   }
 
+#ifdef READ_INPUTS // gpio status read
+  pinMode(D5, INPUT);
+  pinMode(D6, INPUT);
+  bool d5 = digitalRead(D5);
+  bool d6 = digitalRead(D6);
+#else
+  bool d5, d6 = 0;
+#endif
+  
   // Send telemetry sentences, refer to APRS101.pdf
   Serial.println(F("** TELEMETRY PACKETS **"));
-  sprintf(sentence, "%s>APRS,TCPIP*:T#%03d,%03d,%03d,000,000,000,00000000", station.callsign,
+  sprintf(sentence, "%s>%s,TCPIP*:T#%03d,%03d,%03d,000,000,000,%d%d000000", station.callsign,
+          AprsDevice,
           cnt,
           tl.rssi,
-          tl.vbat);
+          tl.vbat,
+          d5,
+          d6);
   client.println(sentence);
   Serial.println(sentence);
   
-  if ( cnt == 0)   // Send telemetry parameters only every 256 packets (it's enough)
-    {
-      //Define telemetry parameters (labels)
-      sprintf(sentence, "%s>APRS,TCPIP*::%s:PARM.RSSI,VBAT",  station.callsign,
-              station.tlm_callsign);
-      client.println(sentence);
-      Serial.println(sentence);
-    
-      //Define telemetry units
-      sprintf(sentence, "%s>APRS,TCPIP*::%s:UNIT.dbm,V",  station.callsign,
-              station.tlm_callsign);
-      client.println(sentence);
-      Serial.println(sentence);
-    
-      //Add telemetry coefficient so the APRS protocol can convert your raw values into real value.
-      sprintf(sentence, "%s>APRS,TCPIP*::%s:EQNS.0,-1,0,0,0.01,0,0,0,0,0,0,0,0,0,0", station.callsign,
-              station.tlm_callsign);
-      client.println(sentence);
-      Serial.println(sentence);
-    
-      //Send bits and project comment
-      sprintf(sentence, "%s>APRS,TCPIP*::%s:BITS.00000000,%s",  station.callsign,
-              station.tlm_callsign,
-              sets.APRS_PRJ);
-      client.println(sentence);
-      Serial.println(sentence);
-    
-      Serial.println();
-      Serial.print(F("closing connection..."));
-      client.stop();
-      Serial.println(F("closed!"));
-    }
-
+  if (cnt == 0) {  // Send telemetry parameters only every 256 packets (it's enough)
+    //Define telemetry parameters (labels)
+    sprintf(sentence, "%s>%s,TCPIP*::%s:PARM.RSSI,VBAT", station.callsign,
+            AprsDevice,
+            station.tlm_callsign);
+    client.println(sentence);
+    Serial.println(sentence);
+  
+    //Define telemetry units
+    sprintf(sentence, "%s>%s,TCPIP*::%s:UNIT.dbm,V", station.callsign,
+            AprsDevice,
+            station.tlm_callsign);
+    client.println(sentence);
+    Serial.println(sentence);
+  
+    //Add telemetry coefficient so the APRS protocol can convert your raw values into real value.
+    sprintf(sentence, "%s>%s,TCPIP*::%s:EQNS.0,-1,0,0,0.01,0,0,0,0,0,0,0,0,0,0", station.callsign,
+            AprsDevice,
+            station.tlm_callsign);
+    client.println(sentence);
+    Serial.println(sentence);
+  
+    //Send bits and project comment
+    sprintf(sentence, "%s>%s,TCPIP*::%s:BITS.00000000,%s", station.callsign,
+            AprsDevice,
+            station.tlm_callsign,
+            sets.APRS_PRJ);
+    client.println(sentence);
+    Serial.println(sentence);
+  }
+  Serial.println();
+  Serial.print(F("closing connection..."));
+  client.stop();
+  Serial.println(F("closed!"));
 }
 
 //******************************************************
