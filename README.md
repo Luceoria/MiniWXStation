@@ -1,4 +1,4 @@
-# MiniWX Station V1.1G
+# MiniWX Station V1.1f
 ESP8266 IoT and BME280 sensor for a minimalist weather station
 
 24/05/2023
