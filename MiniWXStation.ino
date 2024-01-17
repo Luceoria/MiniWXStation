@@ -53,6 +53,7 @@
 
 
 #include "EN_Locale.h"
+//#include "BG_Locale.h"
 //#include "ES_Locale.h"
 //#include "IT_Locale.h"
 //#include "CAT_Locale.h"
