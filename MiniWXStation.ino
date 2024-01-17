@@ -51,8 +51,8 @@
 #include <stdlib.h>
 #include "FS.h"
 
-#include "BG_Locale.h"
-//#include "EN_Locale.h"
+//#include "BG_Locale.h"
+#include "EN_Locale.h"
 //#include "ES_Locale.h"
 //#include "IT_Locale.h"
 //#include "CAT_Locale.h"
@@ -833,11 +833,11 @@ void handleSubmit() {
       message += FPSTR(HTTP_SCRIPT);
       message += FPSTR(HTTP_BODY);
 
-#ifdef LANG_BULGARIAN
-      message.replace(F("{{language}}"), "bg");
-#endif
 #ifdef LANG_ENGLISH
       message.replace(F("{{language}}"), "en");
+#endif
+      #ifdef LANG_BULGARIAN
+      message.replace(F("{{language}}"), "bg");
 #endif
 #ifdef LANG_SPANISH
       message.replace(F("{{language}}"), "es");
@@ -891,10 +891,10 @@ void handleSubmit() {
 
       message += F("<fieldset style='width:49%'><legend style='text-shadow: 2px 1px grey; font-size: 18px;'>MiniWX&#8482; system message </legend>");
 
-#ifdef LANG_BULGARIAN
+#ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to WUNDER server...</div>");
 #endif
-#ifdef LANG_ENGLISH
+#ifdef LANG_BULGARIAN
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to WUNDER server...</div>");
 #endif
 #ifdef LANG_SPANISH
@@ -928,10 +928,10 @@ void handleSubmit() {
 
       message += F("<fieldset style='width:49%'><legend style='text-shadow: 2px 1px grey; font-size: 18px;'>MiniWX&#8482; system message </legend>");
 
-#ifdef LANG_BULGARIAN
+#ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending NTP SYNC request to server...</div>");
 #endif
-#ifdef LANG_ENGLISH
+#ifdef LANG_BULGARIAN
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending NTP SYNC request to server...</div>");
 #endif
 #ifdef LANG_SPANISH
@@ -1143,11 +1143,11 @@ void handleJQuery() {
 //***********************************************************
 void handleSettings() {
 
-#ifdef LANG_BULGARIAN
-  String page = FPSTR(PAGE_MiniWXSettings_BG);
-#endif
 #ifdef LANG_ENGLISH
   String page = FPSTR(PAGE_MiniWXSettings_EN);
+#endif  
+#ifdef LANG_BULGARIAN
+  String page = FPSTR(PAGE_MiniWXSettings_BG);
 #endif
 #ifdef LANG_SPANISH
   String page = FPSTR(PAGE_MiniWXSettings_ES);
@@ -1218,12 +1218,12 @@ void handleNotFound() {
   String message;
 
   message += FPSTR(HTTP_HEAD_HTML);
-#ifdef LANG_BULGARIAN
-  message.replace(F("{{language}}"), "bg");
-#endif  
 #ifdef LANG_ENGLISH
   message.replace(F("{{language}}"), "en");
 #endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{language}}"), "bg");
+#endif  
 #ifdef LANG_SPANISH
   message.replace(F("{{language}}"), "es");
 #endif
@@ -1270,12 +1270,11 @@ void handleGraphs() {
   String message;
 
   message += FPSTR(HTTP_SVG_HEAD);
-
-#ifdef LANG_BULGARIAN
-  message.replace(F("{{language}}"), "bg");
-#endif
 #ifdef LANG_ENGLISH
   message.replace(F("{{language}}"), "en");
+#endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{language}}"), "bg");
 #endif
 #ifdef LANG_SPANISH
   message.replace(F("{{language}}"), "es");
@@ -1332,11 +1331,11 @@ void handleGraphs() {
   message.replace(F("{{svg_grid}}"), FPSTR(HTTP_SVG_GRID));
 
   message += FPSTR(HTTP_EXIT_BUTN);
-#ifdef LANG_BULGARIAN
-  message.replace(F("{{exit_btn}}"), "Изход");
-#endif
 #ifdef LANG_ENGLISH
   message.replace(F("{{exit_btn}}"), "Exit");
+#endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{exit_btn}}"), "Изход");
 #endif
 #ifdef LANG_SPANISH
   message.replace(F("{{exit_btn}}"), "Salir");
