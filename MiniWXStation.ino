@@ -47,7 +47,10 @@
 #include <Ticker.h>
 #include <vector>
 
-#include <NTPtimeESP.h>
+// for NTPClient
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
 #include <stdlib.h>
 #include "FS.h"
 
@@ -140,10 +143,10 @@ const char PASSWORD [] = "YourWunderpasswd";
 #define NTPSYNC_DELAY  12
 
 //**** NTP Server to use
-const char* NTP_Server = "pool.ntp.org"; //italian national institute for measures
+const char* NTP_Server = "pool.ntp.org";
 
-//**** Your time zone UTC related (floating point number)
-#define TIME_ZONE 1.0f
+//**** Your time zone UTC related (1 for CET, -8 for PST)
+#define TIME_ZONE 1
 
 //**** Set credential for OTA firmware upgrade <<--->>
 //*uncomment the #define if you wanna use this handy feature
@@ -167,8 +170,9 @@ IPAddress ip, gateway, mask, dns1, dns2;
 //**************************************************************************************************
 //* time related structures and vars
 //* time server for ntp function
-NTPtime NTPch(NTP_Server);
-strDateTime dateTime;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, NTP_Server, TIME_ZONE * 3600);
+
 byte nextMinTx;
 byte nextHour;
 byte nextSecTx;
@@ -429,14 +433,6 @@ void SetSendFlag(void) {
 //Soft Clock, quite precise indeed...
 void SetSecsFlag(void) {
   bSecsFlag = true;
-  dateTime.second = (dateTime.second + 1) % 60;
-
-  if (dateTime.second == 0) {
-    dateTime.minute = (dateTime.minute + 1) % 60;
-    if (dateTime.minute == 0) {
-      dateTime.hour = (dateTime.hour + 1) % 24;
-    }
-  }
 }
 
 //NTP Sync every NTPSYNC_DELAY hours
@@ -543,6 +539,9 @@ void setup(void)
   if  (detectMenu() == 1) configMenu();
 
   ssidConnect();
+
+  timeClient.begin();
+
   Wire.begin();
   initBme();
   // this for save ChipID in defaults values, just in case you change from BMP to BME
@@ -774,7 +773,7 @@ void handleRoot() {
   sprintf(buffer, "%02d:%02d:%02d", nextHour, nextMinTx, nextSecTx);
   page.replace(F("{{nexttx}}"), buffer);
 
-  sprintf(buffer, "%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second);
+  sprintf(buffer, "%02d:%02d:%02d", timeClient.getHours(), timeClient.getMinutes(), timeClient.getSeconds());
   page.replace(F("{{time}}"), buffer);
 
   page.replace(F("{{SSID}}"), internet.ssid);
@@ -1104,7 +1103,7 @@ void handleJQuery() {
       dpdegc = 0.0f;
       break;
   }
-  sprintf(espclock, "%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second);
+  sprintf(espclock, "%02d:%02d:%02d", timeClient.getHours(), timeClient.getMinutes(), timeClient.getSeconds());
   sprintf(nexttx, "%02d:%02d:%02d", nextHour, nextMinTx, nextSecTx);
   sprintf(uptime, "%d days %02d:%02d:%02d", sysUpTimeDy, sysUpTimeHr, sysUpTimeMn, sysUpTimeSec);
 
@@ -1388,7 +1387,7 @@ void loop()
 
 #ifdef DEBUG_SERIAL_PLOTTER
     char currentTime[10];
-    sprintf(currentTime, "%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second);
+    sprintf(currentTime, "%02d:%02d:%02d", timeClient.getHours(), timeClient.getMinutes(), timeClient.getSeconds());
     Serial.print(currentTime);
     Serial.println(" - Graphs Data Sampled");
 #endif
@@ -1439,7 +1438,7 @@ void updateTime()
   if (bSecsFlag) {
 
 #ifdef SHOW_TICKS
-    sprintf(currentTime, "%02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second);
+    sprintf(currentTime, "%02d:%02d:%02d", timeClient.getHours(), timeClient.getMinutes(), timeClient.getSeconds());
     Serial.println(currentTime);
 #endif
 
@@ -1482,9 +1481,12 @@ void updateServer()
       }
       Serial.println(F("====== add data logger ========="));
       char buffer[50];
-      sprintf(buffer, "%02d/%02d/%04d;", dateTime.day, dateTime.month, dateTime.year);
+
+      time_t epochTime = timeClient.getEpochTime();
+      struct tm *ptm = gmtime ((time_t *)&epochTime);
+      sprintf(buffer, "%02d/%02d/%04d;", ptm->tm_mday, ptm->tm_mon+1, ptm->tm_year+1900);
       f.print(buffer);
-      sprintf(buffer, "%02d:%02d:%02d;", dateTime.hour, dateTime.minute, dateTime.second);
+      sprintf(buffer, "%02d:%02d:%02d;", timeClient.getHours(), timeClient.getMinutes(), timeClient.getSeconds());
       f.print(buffer);
       sprintf(buffer, "%03d;%02d;%05d\n", (int)(wx.temperatureC), (int)(wx.humidity), (int)(wx.pressure));
       f.print(buffer);
@@ -1501,37 +1503,34 @@ void updateServer()
 #define RECV_TIMEOUT  10
 
 void calcNextTX() {
-  nextMinTx = (dateTime.minute + station.transmitDelay) % 60;
-  nextSecTx = dateTime.second;
-  if (nextMinTx < dateTime.minute) (nextHour = dateTime.hour + 1) % 24;
-  else nextHour = dateTime.hour;
+  nextMinTx = (timeClient.getMinutes() + station.transmitDelay) % 60;
+  nextSecTx = timeClient.getSeconds();
+  Serial.printf("nextMinTx %d nextSecTx %d\n", nextMinTx, nextSecTx);
+  if (nextMinTx < timeClient.getMinutes()) (nextHour = timeClient.getHours() + 1) % 24;
+  else nextHour = timeClient.getHours();
 }
 
-void ntp()
-{
-  if (WiFi.status() == WL_CONNECTED)
-  {
+void ntp() {
+  if (WiFi.status() == WL_CONNECTED) {
     // first parameter: Time zone in floating point (for India); second parameter: 1 for European summer time; 2 for US daylight saving time (not implemented yet)
 
-    //NTPch.setSendInterval(SEND_INTV);
-    //NTPch.setRecvTimeout(RECV_TIMEOUT);
-    Serial.print("Getting NTP sync...");
+    Serial.print("Getting NTP sync... ");
 
-    for (uint8_t i = 0; i < 10; i++) {
-      dateTime = NTPch.getNTPtime(TIME_ZONE, 1);
-      delay(10); //don't block the entire system pls...
-      if (dateTime.valid) break;
+    for (uint8_t i = 0; i < 5; i++) {
+      timeClient.update();
+      delay(100); //don't block the entire system pls...
+      if (timeClient.isTimeSet()) break;
     }
 
-    if (!dateTime.valid) {
-      Serial.println(" fail");
+    if (!timeClient.isTimeSet()) {
+      Serial.println("fail");
       return;
     } else {
-      Serial.println(" OK");
+      Serial.println("OK");
     }
 
-    NTPch.printDateTime(dateTime);
-    //dateTime.second = (dateTime.second + RECV_TIMEOUT) % 60;  //adjust the setRecvTimeout delay;
+    Serial.println(timeClient.getFormattedTime());
+    //timeClient.getSeconds() = (timeClient.getSeconds() + RECV_TIMEOUT) % 60;  //adjust the setRecvTimeout delay;
     calcNextTX();
     Serial.print(F(" ->>>>> next tx at : " ));
     char buffer[20];
