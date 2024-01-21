@@ -99,7 +99,7 @@ const char SOFT_VER[] = "v1.1g";
 const char* WiFi_hostname = "MiniWX";
 
 //**** APRS PASSWORD (use -1 if you are using a CWOP callsign)
-const char* AprsPassw = "YouAPRSnumericalPASS";
+const char* AprsPassw = "00000";
 
 //**** APRS Destination Call (device identifier)
 const char* AprsDevice = "APZMWX";
