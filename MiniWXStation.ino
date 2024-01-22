@@ -1621,26 +1621,22 @@ void Send2APRS()
 #endif
 
   Serial.print(F("Connecting to APRS server..."));
-  int retr = 20;
+  int retr = 2;
   while (!client.connect(station.clientAddress, station.clientPort) && (retr > 0)) {
     delay(50);
     --retr;
   }
 
   if (!client.connected()) {
-    Serial.println(F("connection failed"));
+    Serial.println(F(" fail"));
     client.stop();
     return;
   }
-  else
-  {
-    Serial.println(F("done"));
+  Serial.println(F(" OK"));
+  client.println(login);
+  Serial.println(login);
 
-    client.println(login);
-    Serial.println(login);
-
-    delay(3000); //as reccomended, 3" between login and sends packet
-  }
+  delay(3000); //as reccomended, 3" between login and sends packet
 
   //print server reply
   while (client.available()) {
