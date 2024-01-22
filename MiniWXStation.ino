@@ -188,7 +188,7 @@ Ticker TkNtpSync;
 bool bDataAcquisitionFlag;
 Ticker TkDataAcquisition;
 
-unsigned char cnt=-1; // the progressive counter for telemetry packet ID
+uint8_t cnt=0; // the progressive counter for telemetry packet ID
 
 //for the CheckSensor()
 #define MOD_BMP280  0x58
@@ -1649,11 +1649,11 @@ void Send2APRS()
   // and the ALTITUDE field, so i first send a "red dot icon" position report and after that
   // i change the report icon in WX again....dirty, but fully functional :-)
 
-  if (cnt++==256) cnt=0; // packets are sent using a progressive counter instead of the previous random one
-                         // the non-written standard de facto says to reset the counter after 256 packets
+  // packets are sent using a progressive counter instead of the previous random one
+  // the non-written standard de facto says to reset the counter after 256 packets
+  // counter being reset through int overflow
   
-  if ( cnt == 0 || cnt == 64 || cnt == 128 || cnt == 192 ) // Sending one position packet only after 64 telemetry packets sent
-  {
+  if (( cnt % 64 ) == 0) { // Sending one position packet only after 64 telemetry packets sent
     Serial.println(F("** POSITION PACKET **"));
     sprintf(sentence, "%s>%s,TCPIP*:=%s/%s&%s (%s)", station.callsign,
             AprsDevice,
@@ -1765,6 +1765,8 @@ void Send2APRS()
     client.println(sentence);
     Serial.println(sentence);
   }
+
+  cnt++;
   Serial.println();
   Serial.print(F("closing connection..."));
   client.stop();
