@@ -858,7 +858,7 @@ void handleSubmit() {
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to APRS server...</div>");
 #endif
 #ifdef LANG_BULGARIAN
-      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor APRS...</div>");
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпращане на пакети до APRS...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor APRS...</div>");
@@ -895,7 +895,7 @@ void handleSubmit() {
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to WUNDER server...</div>");
 #endif
 #ifdef LANG_BULGARIAN
-      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to WUNDER server...</div>");
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпращане на пакет до WUNDERGROUND...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor WUNDER...</div>");
@@ -932,7 +932,7 @@ void handleSubmit() {
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending NTP SYNC request to server...</div>");
 #endif
 #ifdef LANG_BULGARIAN
-      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending NTP SYNC request to server...</div>");
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпрашане NTP SYNC заявка...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando sync solicitud al servidor NTP...</div>");
