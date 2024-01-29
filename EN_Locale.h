@@ -250,13 +250,13 @@ const char PAGE_MiniWXSettings_EN[] PROGMEM = "<!DOCTYPE html>\
               <fieldset>\
               <legend><h2> Station Callsign and Position </h2></legend>\
                 <label>Callsign</label>\
-                <div><input id='callsign' name='callsign' type='text' maxlength='9' size='9' value='{{callsign}}'/></div>\
+                <div><input id='callsign' name='callsign' type='text' maxlength='9' size='10' value='{{callsign}}'/></div>\
                 <label>Latitude (example 4303.01N)</label>\
-                <div><input id='latitude' name='latitude' type='text' maxlength='8' size='8' value='{{lat}}'/></div>\
+                <div><input id='latitude' name='latitude' type='text' maxlength='8' size='10' value='{{lat}}'/></div>\
                 <label>Longitude (example 01023.16E)</label>\
-                <div><input id='longitude' name='longitude' type='text' maxlength='9' size='9' value='{{lon}}'/></div>\
+                <div><input id='longitude' name='longitude' type='text' maxlength='9' size='10' value='{{lon}}'/></div>\
                 <label>Altitude (meters)</label>\
-                <div><input id='altitude' name='altitude' type='text' maxlength='4' size='4' value='{{alt}}'/></div>\
+                <div><input id='altitude' name='altitude' type='number' maxlength='4' size='10' value='{{alt}}'/></div>\
               </fieldset>\
             </div>\
           </div>\
