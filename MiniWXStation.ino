@@ -54,7 +54,7 @@
 #include <stdlib.h>
 #include "FS.h"
 
-
+//#include "BG_Locale.h"
 #include "EN_Locale.h"
 //#include "ES_Locale.h"
 //#include "IT_Locale.h"
@@ -86,7 +86,7 @@ const char SOFT_VER[] = "v1.1g";
 //**************************************
 
 //**** CHOOSE WEBPAGES LANGUAGE
-#define LANG_ENGLISH
+#define LANG_BULGARIAN
 //#define LANG_SPANISH
 //#define LANG_ITALIAN
 //#define LANG_CATALAN
@@ -706,8 +706,12 @@ void AdjustFieldsets( String* page) {
 //***********************************************************
 void handleRoot() {
 
+
 #ifdef LANG_ENGLISH
   String page = FPSTR(PAGE_Main_EN);
+#endif
+#ifdef LANG_BULGARIAN
+  String page = FPSTR(PAGE_Main_BG);
 #endif
 #ifdef LANG_SPANISH
   String page = FPSTR(PAGE_Main_ES);
@@ -831,6 +835,9 @@ void handleSubmit() {
 #ifdef LANG_ENGLISH
       message.replace(F("{{language}}"), "en");
 #endif
+      #ifdef LANG_BULGARIAN
+      message.replace(F("{{language}}"), "bg");
+#endif
 #ifdef LANG_SPANISH
       message.replace(F("{{language}}"), "es");
 #endif
@@ -848,6 +855,9 @@ void handleSubmit() {
 
 #ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to APRS server...</div>");
+#endif
+#ifdef LANG_BULGARIAN
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпращане на пакети до APRS...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor APRS...</div>");
@@ -883,6 +893,9 @@ void handleSubmit() {
 #ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending packets to WUNDER server...</div>");
 #endif
+#ifdef LANG_BULGARIAN
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпращане на пакет до WUNDERGROUND...</div>");
+#endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando trama al servidor WUNDER...</div>");
 #endif
@@ -916,6 +929,9 @@ void handleSubmit() {
 
 #ifdef LANG_ENGLISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Sending NTP SYNC request to server...</div>");
+#endif
+#ifdef LANG_BULGARIAN
+      message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Изпрашане NTP SYNC заявка...</div>");
 #endif
 #ifdef LANG_SPANISH
       message += F("<form><div class='divTable'><div class='divRow'><div class='divColumn' style='width:98%'><div class='notabheader'>Enviando sync solicitud al servidor NTP...</div>");
@@ -1128,6 +1144,9 @@ void handleSettings() {
 
 #ifdef LANG_ENGLISH
   String page = FPSTR(PAGE_MiniWXSettings_EN);
+#endif  
+#ifdef LANG_BULGARIAN
+  String page = FPSTR(PAGE_MiniWXSettings_BG);
 #endif
 #ifdef LANG_SPANISH
   String page = FPSTR(PAGE_MiniWXSettings_ES);
@@ -1201,6 +1220,9 @@ void handleNotFound() {
 #ifdef LANG_ENGLISH
   message.replace(F("{{language}}"), "en");
 #endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{language}}"), "bg");
+#endif  
 #ifdef LANG_SPANISH
   message.replace(F("{{language}}"), "es");
 #endif
@@ -1247,9 +1269,11 @@ void handleGraphs() {
   String message;
 
   message += FPSTR(HTTP_SVG_HEAD);
-
 #ifdef LANG_ENGLISH
   message.replace(F("{{language}}"), "en");
+#endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{language}}"), "bg");
 #endif
 #ifdef LANG_SPANISH
   message.replace(F("{{language}}"), "es");
@@ -1271,6 +1295,12 @@ void handleGraphs() {
   message.replace(F("{{svg_temp}}"), "Temperature (°C)");
   message.replace(F("{{svg_pres}}"), "Pressure (hPa)");
   message.replace(F("{{svg_rhum}}"), "Relative Humidity (%)");
+  message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
+#endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{svg_temp}}"), "Температура (°C)");
+  message.replace(F("{{svg_pres}}"), "Налягане (hPa)");
+  message.replace(F("{{svg_rhum}}"), "Влажност (%)");
   message.replace(F("{{svg_rssi}}"), "RSSI (dBm)");
 #endif
 #ifdef LANG_SPANISH
@@ -1302,6 +1332,9 @@ void handleGraphs() {
   message += FPSTR(HTTP_EXIT_BUTN);
 #ifdef LANG_ENGLISH
   message.replace(F("{{exit_btn}}"), "Exit");
+#endif
+#ifdef LANG_BULGARIAN
+  message.replace(F("{{exit_btn}}"), "Изход");
 #endif
 #ifdef LANG_SPANISH
   message.replace(F("{{exit_btn}}"), "Salir");
